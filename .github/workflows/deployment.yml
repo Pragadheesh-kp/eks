@@ -4,13 +4,13 @@ on:
   workflow_dispatch: # Allows manual triggering of the workflow
     inputs:
       frontend_image_version:
-        description: 'The version of the Docker image to deploy'
+        description: 'The version of the Frontend Docker image to deploy'
         required: true
-        default: 'your version' # Default version
+        default: '1.0'
       backend_image_version:
         description: 'The version of the Backend Docker image to deploy'
         required: true
-        default: 'your version' # Default version for backend  
+        default: '1.0'
 
 jobs:
   deploy:
@@ -31,18 +31,21 @@ jobs:
       id: update_kubeconfig
       run: |
         aws eks update-kubeconfig --region ap-south-1 --name task7 
-    - name: Deploy to Kubernetes
+
+    - name: Update Frontend Image Version
       run: |
-        sed -i "s/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/frontend:[0-9]\+/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/frontend:${{ github.event.inputs.image_version }}/" frontend/frontend.yml
-        
-    - name: Deploy Backend to Kubernetes
+        sed -i "s/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/frontend:[0-9]\+/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/frontend:${{ github.event.inputs.frontend_image_version }}/" frontend/frontend.yml
+        yamllint frontend/frontend.yml
+
+    - name: Apply Frontend Manifest
       run: |
         kubectl apply -f frontend/frontend.yml
-        
+
     - name: Update Backend Image Version
       run: |
         sed -i "s/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/backend:[0-9]\+/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/backend:${{ github.event.inputs.backend_image_version }}/" backend/backend.yml
+        yamllint backend/backend.yml
 
-    - name: Deploy Backend to Kubernetes
+    - name: Apply Backend Manifest
       run: |
         kubectl apply -f backend/backend.yml
