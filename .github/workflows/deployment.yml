@@ -1,0 +1,38 @@
+name: Deploy to Kubernetes
+
+on:
+  workflow_dispatch: # Allows manual triggering of the workflow
+    inputs:
+      image_version:
+        description: 'The version of the Docker image to deploy'
+        required: true
+        default: '2' # Default version
+
+jobs:
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        role-to-assume: arn:aws:iam::123456789012:role/YourEKSRole # Replace with your IAM role ARN
+        aws-region: ap-south-1
+
+    - name: Update kubeconfig for EKS
+      id: update_kubeconfig
+      run: |
+        aws eks update-kubeconfig --region ap-south-1 --name task7 # Replace with your EKS cluster name
+
+    - name: Deploy to Kubernetes
+      run: |
+        # Replace the image version in the manifest with the input provided
+        sed -i "s/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/frontend:[0-9]\+/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/frontend:${{ github.event.inputs.image_version }}/" frontend.yml
+        
+        # Apply the Kubernetes manifest
+        kubectl apply -f frontend.yml
+

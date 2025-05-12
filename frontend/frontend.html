@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Python CRUD App</title>
+</head>
+<body>
+  <h1>Simple CRUD App</h1>
+  <input type="text" id="itemInput" placeholder="Item name">
+  <button onclick="addItem()">Add</button>
+  <ul id="itemList"></ul>
+
+  <h2>Register</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="registerUser()">Register</button>
+
+  <script>
+    const apiUrl = 'http://localhost:5000/api/items';
+    const registerUrl = 'http://localhost:5000/api/register';
+
+    // Fetch and display all items
+    async function fetchItems() {
+      const res = await fetch(apiUrl);
+      const items = await res.json();
+      const list = document.getElementById('itemList');
+      list.innerHTML = '';
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item.name;
+
+        // Add Update functionality
+        li.onclick = () => updateItemPrompt(item.id, item.name);
+
+        // Add Delete button
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.style.marginLeft = '10px';
+        deleteButton.onclick = (e) => {
+          e.stopPropagation(); // Prevent triggering the update prompt
+          deleteItem(item.id);
+        };
+
+        li.appendChild(deleteButton);
+        list.appendChild(li);
+      });
+    }
+
+    // Add a new item
+    async function addItem() {
+      const input = document.getElementById('itemInput');
+      if (!input.value.trim()) {
+        alert('Item name cannot be empty!');
+        return;
+      }
+      await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: input.value })
+      });
+      input.value = '';
+      fetchItems();
+    }
+
+    // Update an item
+    async function updateItem(id, newName) {
+      await fetch(`${apiUrl}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName })
+      });
+      fetchItems();
+    }
+
+    // Prompt user for new item name and update
+    function updateItemPrompt(id, currentName) {
+      const newName = prompt('Enter the new name:', currentName);
+      if (newName && newName.trim() !== currentName) {
+        updateItem(id, newName.trim());
+      }
+    }
+
+    // Delete an item
+    async function deleteItem(id) {
+      await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+      fetchItems();
+    }
+
+    // Register a user
+    async function registerUser() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      if (!username || !password) {
+        alert('Username and password cannot be empty!');
+        return;
+      }
+      const res = await fetch(registerUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      if (res.status === 201) {
+        alert('User registered successfully');
+      } else {
+        const err = await res.json();
+        alert('Error: ' + err.error);
+      }
+    }
+
+    // Fetch and display items on page load
+    fetchItems();
+  </script>
+</body>
+</html>

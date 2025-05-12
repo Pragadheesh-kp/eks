@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+spec:
+  replicas: 1  # Number of pods to run
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: 241533159425.dkr.ecr.ap-south-1.amazonaws.com/frontend:1  # Image with version 1
+          ports:
+            - containerPort: 80  # Port inside the container
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: frontend  # Matches the deployment's label
+  ports:
+    - protocol: TCP
+      port: 8000  # External port you want to expose
+      targetPort: 80  # Internal container port
+      nodePort: 30000  # The port on the node (choose an open port, like 30000)
+  type: NodePort  # Type to expose via NodePort (not LoadBalancer)
+
