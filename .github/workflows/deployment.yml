@@ -6,7 +6,7 @@ on:
       image_version:
         description: 'The version of the Docker image to deploy'
         required: true
-        default: '2' # Default version
+        default: 'your version' # Default version
 
 jobs:
   deploy:
@@ -18,16 +18,15 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v3
-      with:
-        role-to-assume: arn:aws:iam::123456789012:role/YourEKSRole # Replace with your IAM role ARN
-        aws-region: ap-south-1
+      run: |
+        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws configure set region ap-south-1
 
     - name: Update kubeconfig for EKS
       id: update_kubeconfig
       run: |
-        aws eks update-kubeconfig --region ap-south-1 --name task7 # Replace with your EKS cluster name
-
+        aws eks update-kubeconfig --region ap-south-1 --name task7 
     - name: Deploy to Kubernetes
       run: |
         # Replace the image version in the manifest with the input provided
