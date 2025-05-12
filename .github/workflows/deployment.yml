@@ -3,10 +3,14 @@ name: Deploy to Kubernetes
 on:
   workflow_dispatch: # Allows manual triggering of the workflow
     inputs:
-      image_version:
+      frontend_image_version:
         description: 'The version of the Docker image to deploy'
         required: true
         default: 'your version' # Default version
+      backend_image_version:
+        description: 'The version of the Backend Docker image to deploy'
+        required: true
+        default: 'your version' # Default version for backend  
 
 jobs:
   deploy:
@@ -29,9 +33,15 @@ jobs:
         aws eks update-kubeconfig --region ap-south-1 --name task7 
     - name: Deploy to Kubernetes
       run: |
-        # Replace the image version in the manifest with the input provided
         sed -i "s/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/frontend:[0-9]\+/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/frontend:${{ github.event.inputs.image_version }}/" frontend/frontend.yml
         
         # Apply the Kubernetes manifest
         kubectl apply -f frontend/frontend.yml
+        
+    - name: Update Backend Image Version
+      run: |
+        sed -i "s/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/backend:[0-9]\+/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/backend:${{ github.event.inputs.backend_image_version }}/" backend/backend.yml
 
+    - name: Deploy Backend to Kubernetes
+      run: |
+        kubectl apply -f backend/backend.yml
