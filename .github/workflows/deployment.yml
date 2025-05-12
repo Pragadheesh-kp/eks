@@ -35,7 +35,8 @@ jobs:
       run: |
         sed -i "s/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/frontend:[0-9]\+/241533159425.dkr.ecr.ap-south-1.amazonaws.com\/frontend:${{ github.event.inputs.image_version }}/" frontend/frontend.yml
         
-        # Apply the Kubernetes manifest
+    - name: Deploy Backend to Kubernetes
+      run: |
         kubectl apply -f frontend/frontend.yml
         
     - name: Update Backend Image Version
